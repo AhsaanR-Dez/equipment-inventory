@@ -1,3 +1,4 @@
+
 # Equipment Inventory
 
 Warm-up project B from my TypeScript internship roadmap. A read-only rack
