@@ -27,6 +27,10 @@ export interface SeedRow {
  * a UNIQUE (rack_label, rack_unit) constraint.
  */
 export function buildRows(count: number): SeedRow[] {
+  if (!Number.isInteger(count) || count < 0) {
+    throw new Error(`count must be a non-negative integer, got ${String(count)}.`);
+  }
+
   const capacity = RACK_LABELS.length * 42;
   if (count > capacity) {
     throw new Error(`Cannot build ${String(count)} rows, only ${String(capacity)} slots exist.`);

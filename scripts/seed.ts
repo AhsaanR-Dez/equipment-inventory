@@ -1,25 +1,19 @@
-
 import 'dotenv/config';
-import { Pool } from 'pg';
+import { Pool, type PoolClient } from 'pg';
 import { buildRows } from '../src/build-rows.ts';
+import { connectionStringFromEnv } from '../src/db-config.ts';
 
 const ROW_COUNT = 50;
 
-async function main(): Promise<void> {
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) {
-    throw new Error('DATABASE_URL is not set. Copy .env.example to .env first.');
-  }
+async function seed(client: PoolClient, count: number): Promise<number> {
+  const rows = buildRows(count);
 
-  const pool = new Pool({ connectionString });
-
+  await client.query('BEGIN');
   try {
-    const rows = buildRows(ROW_COUNT);
-
-    await pool.query('TRUNCATE TABLE equipment RESTART IDENTITY');
+    await client.query('TRUNCATE TABLE equipment RESTART IDENTITY');
 
     for (const row of rows) {
-      await pool.query(
+      await client.query(
         `INSERT INTO equipment
            (asset_tag, hostname, model, rack_label, rack_unit, status, installed_at)
          VALUES ($1, $2, $3, $4, $5, $6, $7)`,
@@ -35,10 +29,29 @@ async function main(): Promise<void> {
       );
     }
 
-    const { rows: countRows } = await pool.query<{ count: string }>(
+    const { rows: countRows } = await client.query<{ count: string }>(
       'SELECT COUNT(*)::text AS count FROM equipment',
     );
-    console.log(`Seeded ${countRows[0]?.count ?? '0'} rows.`);
+
+    await client.query('COMMIT');
+    return Number(countRows[0]?.count ?? '0');
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  }
+}
+
+async function main(): Promise<void> {
+  const pool = new Pool({ connectionString: connectionStringFromEnv() });
+
+  try {
+    const client = await pool.connect();
+    try {
+      const inserted = await seed(client, ROW_COUNT);
+      console.log(`Seeded ${String(inserted)} rows.`);
+    } finally {
+      client.release();
+    }
   } finally {
     await pool.end();
   }
