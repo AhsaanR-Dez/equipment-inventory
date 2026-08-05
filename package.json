@@ -12,7 +12,8 @@
     "test": "vitest run --coverage",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
-    "db:seed": "tsx scripts/seed.ts"
+    "db:seed": "tsx scripts/seed.ts",
+    "db:dump": "tsx scripts/dump.ts"
   },
   "dependencies": {
     "dotenv": "^17.0.0",
