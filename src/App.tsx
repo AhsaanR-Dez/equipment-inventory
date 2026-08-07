@@ -2,6 +2,16 @@ import { useEffect, useState } from 'react';
 import { EquipmentTable } from './EquipmentTable.tsx';
 import type { Equipment } from './types.ts';
 
+/**
+ * The JSON file is generated and not tracked in git, so it could be missing,
+ * stale or half-written. Casting it with `as Equipment[]` would just tell
+ * TypeScript to trust it, and then a bad file crashes the table instead of
+ * showing the error message.
+ */
+function isEquipmentArray(value: unknown): value is Equipment[] {
+  return Array.isArray(value) && value.every((item) => typeof item === 'object' && item !== null);
+}
+
 type LoadState =
   | { status: 'loading' }
   | { status: 'error'; message: string }
@@ -19,8 +29,11 @@ export function App(): React.JSX.Element {
         if (!response.ok) {
           throw new Error(`Request failed with ${String(response.status)}`);
         }
-        const equipment = (await response.json()) as Equipment[];
-        setState({ status: 'ready', equipment });
+        const parsed: unknown = await response.json();
+        if (!isEquipmentArray(parsed)) {
+          throw new Error('equipment.json is not a list of equipment');
+        }
+        setState({ status: 'ready', equipment: parsed });
       } catch (error) {
         if (controller.signal.aborted) return;
         setState({
