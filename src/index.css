@@ -30,3 +30,40 @@ th {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.filters input,
+.filters select,
+.filters button {
+  padding: 0.35rem 0.5rem;
+  font: inherit;
+}
+
+.filters input {
+  min-width: 16rem;
+}
+
+.count {
+  margin-left: auto;
+  font-size: 0.85rem;
+  opacity: 0.75;
+}
+
+tbody tr {
+  cursor: pointer;
+}
+
+tbody tr:hover {
+  background: #8882;
+}
+
+tbody tr.selected {
+  background: #4a90e233;
+}
